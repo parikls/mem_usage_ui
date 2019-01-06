@@ -55,3 +55,4 @@ fabric.properties
 *.pyc
 dist
 *.egg-info
+MANIFEST
