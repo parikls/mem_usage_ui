@@ -8,7 +8,7 @@ import psutil
 from aiohttp.web_response import Response
 from aiohttp.web_ws import WebSocketResponse
 
-from mem_usage_ui.monitor import process_user_message, clean_snapshotting_task
+from mem_usage_ui.snapshot import process_user_message, clean_snapshotting_task
 from mem_usage_ui.settings import TEMPLATES_DIR
 
 logger = logging.getLogger("mem_usage_ui")
