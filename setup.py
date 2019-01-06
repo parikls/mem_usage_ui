@@ -1,7 +1,6 @@
 import os
 from distutils.core import setup
 
-from setuptools import find_packages
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
     README = readme.read()
@@ -11,7 +10,7 @@ with open("requirements.txt") as f:
 
 setup(
     name='mem_usage_ui',
-    version='0.1',
+    version='0.2',
     description='UI for memory usage of processes',
     long_description=README,
     author='Dmytro Smyk',
