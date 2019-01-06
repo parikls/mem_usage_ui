@@ -13,7 +13,8 @@ done &
 Installation
 ============
 
-`pip install mem_usage_ui`
+- Python3.7 is a preferable interpreter
+- run `pip install mem_usage_ui`
 
 Usage
 =====

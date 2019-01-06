@@ -183,7 +183,9 @@
             filteredProcesses() {
                 return this.processes
                     .filter(
-                        (process) => process.name.toLowerCase().indexOf(this.processFilter.toLowerCase()) !== -1
+                        (process) =>
+                            process.name.toLowerCase().indexOf(this.processFilter.toLowerCase()) !== -1 ||
+                            process.cmdline.toLowerCase().indexOf(this.processFilter.toLowerCase()) !== -1
                     )
             }
         }

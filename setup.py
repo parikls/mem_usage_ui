@@ -10,7 +10,7 @@ with open("requirements.txt") as f:
 
 setup(
     name='mem_usage_ui',
-    version='0.2',
+    version='0.3',
     description='UI for memory usage of processes',
     long_description=README,
     author='Dmytro Smyk',

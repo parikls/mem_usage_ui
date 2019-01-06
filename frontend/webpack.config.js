@@ -4,8 +4,8 @@ var webpack = require('webpack');
 module.exports = {
   entry: './src/main.js',
   output: {
-    path: path.resolve(__dirname, '../backend/static/js'),
-    publicPath: '../backend/static/js',
+    path: path.resolve(__dirname, '../mem_usage_ui/static/js'),
+    publicPath: '../mem_usage_ui/static/js',
     filename: 'build.js'
   },
   module: {
