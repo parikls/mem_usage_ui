@@ -8,7 +8,7 @@ import psutil
 from aiohttp.web_response import Response
 from aiohttp.web_ws import WebSocketResponse
 
-from mem_usage_ui.snapshot import process_user_message, clean_snapshotting_task
+from mem_usage_ui.snapshot import SnapshotProcessor
 from mem_usage_ui.settings import TEMPLATES_DIR
 
 logger = logging.getLogger("mem_usage_ui")
@@ -16,6 +16,8 @@ logger = logging.getLogger("mem_usage_ui")
 
 ROOT = "root"
 PROCESS_ATTRS = ("pid", "name", "cmdline")
+
+snapshot_processor = SnapshotProcessor()
 
 
 async def index(request):
@@ -48,9 +50,7 @@ async def websocket_handler(request):
     await ws.prepare(request)
 
     logger.info("New websocket connection")
-
     request.app["websockets"].add(ws)
-    task = None
 
     async for msg in ws:
 
@@ -62,13 +62,12 @@ async def websocket_handler(request):
                 await ws.send_json({"success": False, "message": "Can't load provided JSON"})
                 await ws.close()
             else:
-                task = await process_user_message(ws, message, task)
+                await snapshot_processor.process_user_message(ws, message)
 
         elif msg.type == aiohttp.WSMsgType.ERROR:
             print('ws connection closed with exception %s' % ws.exception())
 
     logger.info("Websocket disconnect. Cleaning")
     request.app["websockets"].remove(ws)
-    clean_snapshotting_task(task)
 
     return ws

@@ -12,52 +12,49 @@ SUBSCRIBE = "subscribe"
 UNSUBSCRIBE = "unsubscribe"
 
 
-async def process_user_message(ws: WebSocketResponse, message: dict, task: asyncio.Task) -> asyncio.Task:
-    """
-    Process user message. Create or cancel snapshotting tasks based on user input
-    """
+class SnapshotProcessor:
 
-    logger.info("Processing user message")
-    logger.debug(message)
+    def __init__(self):
+        self._processes = {}
+        self._loop = asyncio.get_event_loop()
 
-    if message["type"] == SUBSCRIBE:
-        logger.info("New subscribe message received for PID %s" % message["pid"])
+    async def process_user_message(self, ws: WebSocketResponse, message: dict):
+        """
+        Process user message. Create or cancel snapshotting tasks based on user input
+        """
 
-        # if user was already subscribed to another process we need to cancel that task
-        clean_snapshotting_task(task)
+        logger.info("Processing user message")
 
-        # schedule snapshotting task
-        logger.info("Scheduling new snapshotting task for pid %s" % message["pid"])
-        loop = asyncio.get_event_loop()
-        task = loop.create_task(snapshotting(ws, message["pid"], int(message["interval"])))
+        if message["type"] == SUBSCRIBE:
+            logger.info("New subscribe message received for PID %s" % message["pid"])
+            self._processes[message["pid"]] = ws
+            _ = self._loop.create_task(self.snapshot(message["pid"], message["interval"]))
 
-    elif message["type"] == UNSUBSCRIBE:
+        elif message["type"] == UNSUBSCRIBE:
 
-        logger.info("Unsubscribe message received for PID %s" % message["pid"])
-        clean_snapshotting_task(task)
+            logger.info("Unsubscribe message received for PID %s" % message["pid"])
+            del self._processes[message["pid"]]
 
-    return task
+    async def snapshot(self, pid: int, interval: float = 1):
 
+        await asyncio.sleep(float(interval))
 
-async def snapshotting(ws: WebSocketResponse, pid: int, interval: int = 1):
-    """
-    Perform snapshotting with provided `interval` and send snapshot to user
-    """
-    logger.info("Start snapshotting process with PID %s" % pid)
+        try:
+            subscriber = self._processes[pid]
+        except KeyError:
+            # user unsubscribed
+            return
 
-    while True:
-        await asyncio.sleep(interval)
         try:
             process = psutil.Process(pid)
         except NoSuchProcess:
             logger.warning("No such process with PID %s" % pid)
-            await ws.send_str(json.dumps({
+            await subscriber.send_str(json.dumps({
                 "success": False,
                 "message": "No such process or it was terminated."
             }))
             return
-
-        await ws.send_str(json.dumps({
+        await subscriber.send_str(json.dumps({
             "success": True,
             "rss": round(process.memory_info().rss / 1024 / 1024),
             "status": process.status(),
@@ -67,8 +64,5 @@ async def snapshotting(ws: WebSocketResponse, pid: int, interval: int = 1):
             "username": process.username(),
         }))
 
-
-def clean_snapshotting_task(task):
-    if task and not task.cancelled() and not task.done():
-        logger.info("Clear snapshotting task")
-        task.cancel()
+        # still subscribed - re-schedule
+        _ = self._loop.create_task(self.snapshot(pid, interval))
