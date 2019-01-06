@@ -1,0 +1,6 @@
+include *.md
+include setup.py
+include requirements.txt
+include mem_usage_ui/static/js/build.js
+include mem_usage_ui/templates/index.html
+global-exclude *pyc
