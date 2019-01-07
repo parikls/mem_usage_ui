@@ -25,3 +25,21 @@ Usage
 
 
 ![alt text](https://raw.githubusercontent.com/parikls/mem_usage_ui/master/mem_usage_ui.png)
+
+
+Development
+===========
+
+Backend
+-------
+
+- Install requirements: `pip install -r requirements.txt`
+- Run server: `python -m mem_usage_ui --debug=True`
+
+Frontend
+--------
+
+- Go to frontend directory: `cd frontend`
+- Create (and watch) dev build - `npm run dev`
+- Before PR please create a production build `npm run prod`
+

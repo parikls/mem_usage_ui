@@ -1,15 +1,15 @@
 import asyncio
-import json
 import logging
 
 import psutil
 from aiohttp.web_ws import WebSocketResponse
-from psutil import NoSuchProcess
+from psutil import Error
 
 logger = logging.getLogger("mem_usage_ui")
 
 SUBSCRIBE = "subscribe"
 UNSUBSCRIBE = "unsubscribe"
+RSS_DIVIDER = 1024
 
 
 class SnapshotProcessor:
@@ -39,9 +39,8 @@ class SnapshotProcessor:
 
     async def unsubscribe(self, ws: WebSocketResponse):
         logger.info("Unsubscribe message received")
-        pid = self._ws_pid[ws]
-        del self._pid_ws[pid]
-        del self._ws_pid[ws]
+        pid = self._ws_pid.pop(ws, None)
+        self._pid_ws.pop(pid, None)
 
     async def snapshot(self, pid: int, interval: float = 1):
         await asyncio.sleep(float(interval))
@@ -54,22 +53,22 @@ class SnapshotProcessor:
 
         try:
             process = psutil.Process(pid)
-        except NoSuchProcess:
-            logger.warning("No such process with PID %s" % pid)
-            await ws.send_str(json.dumps({
+            process = process.as_dict(
+                attrs=("memory_info", "status", "cpu_percent", "memory_percent", "num_threads", "username")
+            )
+            process["rss"] = round(process.pop("memory_info").rss / RSS_DIVIDER / RSS_DIVIDER)
+            process["success"] = True
+
+        except Error:
+            logger.warning("No such process. PID=%s" % pid)
+            await self.unsubscribe(ws)
+            await ws.send_json({
                 "success": False,
                 "message": "No such process or it was terminated."
-            }))
+            })
             return
-        await ws.send_str(json.dumps({
-            "success": True,
-            "rss": round(process.memory_info().rss / 1024 / 1024),
-            "status": process.status(),
-            "cpu_percent": process.cpu_percent(),
-            "memory_percent": process.memory_percent(),
-            "num_threads": process.num_threads(),
-            "username": process.username(),
-        }))
 
-        # still subscribed - re-schedule
-        _ = self._loop.create_task(self.snapshot(pid, interval))
+        if not ws.closed:
+            await ws.send_json(process)
+            # still subscribed - re-schedule
+            _ = self._loop.create_task(self.snapshot(pid, interval))

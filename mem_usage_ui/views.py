@@ -55,7 +55,6 @@ async def websocket_handler(request):
     async for msg in ws:
 
         if msg.type == aiohttp.WSMsgType.TEXT:
-            logger.info(msg)
             try:
                 message = msg.json()
             except (TypeError, ValueError) as e:

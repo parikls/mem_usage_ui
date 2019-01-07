@@ -1,7 +1,7 @@
 <template>
     <div id="mem">
 
-        <div class="processes grey darken-1">
+        <div class="processes grey darken-1" v-if="!fullScreenView">
 
             <div class="row">
                 <div class="input-field col s12 m12 l12">
@@ -40,15 +40,17 @@
             </table>
         </div>
 
-        <div class="chart">
+        <div v-bind:class="{'chart-full': fullScreenView, 'chart': !fullScreenView}">
             <p class="center-align red-text" v-if="errorMessage">{{ errorMessage }}</p>
             <line-chart :chart-data="chartDataCollection"></line-chart>
             <div class="filter">
                 <div class="row">
                     <div class="col s12 m12 l12">
                         <p class="center-align">
-                            <a class="btn grey darken-1 white-text" v-if="snapshotEnabled" @click="unsubscribe">Stop
-                                snapshotting</a>
+                            <a class="btn grey darken-1 white-text" v-if="snapshotEnabled" @click="unsubscribe">Stop snapshotting</a>
+                        </p>
+                        <p class="center-align">
+                            <a class="btn grey darken-1 white-text" @click="fullScreenView = !fullScreenView">{{ fullScreenText }}</a>
                         </p>
                     </div>
                 </div>
@@ -85,7 +87,8 @@
 
                 snapshotInterval: 1,
                 snapshotEnabled: false,
-                errorMessage: null
+                errorMessage: null,
+                fullScreenView: false
             }
         },
 
@@ -177,7 +180,7 @@
                     this.chartDataCollection = {
                         labels: this.chartData.timestamps,
                         datasets: [{
-                            label: `Memory consumption for ${this.activeProcess.name}`,
+                            label: this.activeProcess.cmdline,
                             backgroundColor: '#ff3d00',
                             data: this.chartData.memory
                         }]
@@ -200,6 +203,10 @@
                             process.name.toLowerCase().indexOf(this.processFilter.toLowerCase()) !== -1 ||
                             process.cmdline.toLowerCase().indexOf(this.processFilter.toLowerCase()) !== -1
                     )
+            },
+
+            fullScreenText(){
+                return this.fullScreenView ? "Turn OFF full-screen view" : "Turn ON full-screen view"
             }
         }
     }
@@ -213,6 +220,16 @@
         padding-left: 5vw;
         width: 50vw;
         max-width: 50vw;
+        height: 100vh;
+        max-height: 100vh;
+    }
+
+    .chart-full {
+        position: absolute;
+        margin-top: 20vh;
+        padding-left: 5vw;
+        width: 100vw;
+        max-width: 100vw;
         height: 100vh;
         max-height: 100vh;
     }
