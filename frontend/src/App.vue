@@ -9,31 +9,33 @@
                 </div>
 
                 <div class="input-field col s12 m12 l12">
-                    <input type="text" id="snapshot-interval" class="input white-text" placeholder="1" v-model="snapshotInterval">
+                    <input type="text" id="snapshot-interval" class="input white-text" placeholder="1"
+                           v-model="snapshotInterval">
                     <label for="snapshot-interval">Memory snapshot interval</label>
                 </div>
 
 
                 <p class="center-align">
-                    <a class="btn refresh-processes grey darken-2 white-text" @click="refreshProcesses">refresh processes</a>
+                    <a class="btn refresh-processes grey darken-2 white-text" @click="refreshProcesses">refresh
+                        processes</a>
                 </p>
             </div>
 
             <table class="highlight centered responsive-table white-text">
                 <thead>
-                    <tr>
-                        <th>PID</th>
-                        <th>Name</th>
-                        <th>Command line</th>
-                    </tr>
+                <tr>
+                    <th>PID</th>
+                    <th>Name</th>
+                    <th>Command line</th>
+                </tr>
                 </thead>
 
                 <tbody>
-                    <tr v-for="process in filteredProcesses" @click="subscribe(process)">
-                        <td>{{ process.pid }}</td>
-                        <td>{{ process.name }}</td>
-                        <td>{{ process.cmdline}}</td>
-                    </tr>
+                <tr v-for="process in filteredProcesses" @click="subscribe(process)">
+                    <td>{{ process.pid }}</td>
+                    <td>{{ process.name }}</td>
+                    <td>{{ process.cmdline}}</td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -45,7 +47,8 @@
                 <div class="row">
                     <div class="col s12 m12 l12">
                         <p class="center-align">
-                            <a class="btn grey darken-1 white-text" v-if="snapshotEnabled" @click="unsubscribe">Stop snapshotting</a>
+                            <a class="btn grey darken-1 white-text" v-if="snapshotEnabled" @click="unsubscribe">Stop
+                                snapshotting</a>
                         </p>
                     </div>
                 </div>
@@ -83,7 +86,6 @@
                 snapshotInterval: 1,
                 snapshotEnabled: false,
                 errorMessage: null
-
             }
         },
 
@@ -108,12 +110,16 @@
              */
             subscribe(process) {
 
-                console.log(`Subscribing to process ${process.name}. PID = ${process.pid}`);
-
-                // same process?
-                if (process.pid === this.activeProcess.pid) {
-                    console.log(`Attempt to subscribe to already subscribed process`);
-                    return
+                // already subscribed to some process
+                if (this.activeProcess.pid) {
+                    // same process?
+                    if (process.pid === this.activeProcess.pid) {
+                        this.errorMessage = `Attempt to subscribe to already subscribed process`;
+                        return
+                    } else {
+                        // unsubscribe from existing one
+                        this.unsubscribe();
+                    }
                 }
 
                 // clear all previous subscribing variables
@@ -125,12 +131,11 @@
                     timestamps: []
                 };
 
-                // send `subscribe` message
+                // send `subscribe` event
                 this.ws.server.send(JSON.stringify({
                     type: "subscribe",
                     pid: process.pid,
                     interval: this.snapshotInterval
-
                 }));
 
             },
@@ -139,7 +144,9 @@
              * Unsubscribe from current active process
              */
             unsubscribe() {
-                if (!this.activeProcess.pid){ return }
+                if (!this.activeProcess.pid) {
+                    return
+                }
 
                 this.ws.server.send(JSON.stringify({
                     type: "unsubscribe",
@@ -157,8 +164,14 @@
             handleRealtimeMessage(message) {
                 let data = JSON.parse(message.data);
                 if (data.success) {
-                    this.chartData.memory.push(data.rss);
-                    this.chartData.timestamps.push((new Date).toLocaleTimeString());
+                    if (this.chartData.memory[this.chartData.memory.length - 1] === data.rss &&
+                        this.chartData.memory[this.chartData.memory.length - 2] === data.rss) {
+                        // memory consumption didn't changed. adjust timestamp
+                        this.chartData.timestamps[this.chartData.timestamps.length - 1] = (new Date).toLocaleTimeString();
+                    } else {
+                        this.chartData.memory.push(data.rss);
+                        this.chartData.timestamps.push((new Date).toLocaleTimeString());
+                    }
 
                     // update chart
                     this.chartDataCollection = {

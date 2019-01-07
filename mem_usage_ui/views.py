@@ -68,6 +68,7 @@ async def websocket_handler(request):
             print('ws connection closed with exception %s' % ws.exception())
 
     logger.info("Websocket disconnect. Cleaning")
+    await snapshot_processor.unsubscribe(ws)
     request.app["websockets"].remove(ws)
 
     return ws
