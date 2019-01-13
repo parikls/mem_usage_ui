@@ -6,11 +6,13 @@ from logging.config import dictConfig
 from aiohttp import web
 
 from mem_usage_ui.routes import setup_routes
+from mem_usage_ui.snapshot import SnapshotProcessor
 
 
-async def init_app():
+async def init_app(loop):
     app = web.Application()
     app["websockets"] = set()
+    app["snapshot_processor"] = SnapshotProcessor(loop)
 
     app.on_cleanup.append(shutdown)
     setup_routes(app)
@@ -52,6 +54,11 @@ def configure_logging(debug=False):
     })
 
 
+def open_browser(url):
+    import webbrowser
+    webbrowser.open(url)
+
+
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--debug", required=False, default=False)
@@ -64,8 +71,10 @@ def parse_args():
 def main():
     options = parse_args()
     configure_logging(options.debug)
-    asyncio.get_event_loop().set_debug(options.debug)
-    app = init_app()
+    loop = asyncio.get_event_loop()
+    loop.set_debug(options.debug)
+    app = init_app(loop)
+    loop.call_later(1, open_browser, "http://{host}:{port}".format(host=options.host, port=options.port))
     web.run_app(app, host=options.host, port=options.port)
 
 

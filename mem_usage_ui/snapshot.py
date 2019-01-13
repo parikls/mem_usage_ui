@@ -14,10 +14,10 @@ RSS_DIVIDER = 1024
 
 class SnapshotProcessor:
 
-    def __init__(self):
+    def __init__(self, loop=None):
         self._pid_ws = {}
         self._ws_pid = {}
-        self._loop = asyncio.get_event_loop()
+        self._loop = loop or asyncio.get_event_loop()
 
     async def process_user_message(self, ws: WebSocketResponse, message: dict):
         """
@@ -35,7 +35,7 @@ class SnapshotProcessor:
         logger.info("New subscribe message received for PID %s" % message["pid"])
         self._pid_ws[message["pid"]] = ws
         self._ws_pid[ws] = message["pid"]
-        _ = self._loop.create_task(self.snapshot(message["pid"], message["interval"]))
+        _ = self._loop.create_task(self.snapshot(message["pid"], message.get("interval", 1)))
 
     async def unsubscribe(self, ws: WebSocketResponse):
         logger.info("Unsubscribe message received")
@@ -59,7 +59,7 @@ class SnapshotProcessor:
             process["rss"] = round(process.pop("memory_info").rss / RSS_DIVIDER / RSS_DIVIDER)
             process["success"] = True
 
-        except Error:
+        except (Error, ValueError):
             logger.warning("No such process. PID=%s" % pid)
             await self.unsubscribe(ws)
             await ws.send_json({

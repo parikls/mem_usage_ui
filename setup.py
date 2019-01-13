@@ -1,16 +1,29 @@
-import os
+import pathlib
+import re
 from distutils.core import setup
 
+here = pathlib.Path(__file__).parent
+init = here / "mem_usage_ui" / "__init__.py"
+readme_path = here / "README.md"
+requirements_path = here / "requirements.txt"
 
-with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
-    README = readme.read()
+with init.open() as fp:
+    try:
+        version = re.findall(r"^__version__ = '([^']+)'$", fp.read(), re.M)[0]
+    except IndexError:
+        raise RuntimeError('Unable to determine version.')
 
-with open("requirements.txt") as f:
+
+with readme_path.open() as f:
+    README = f.read()
+
+with requirements_path.open() as f:
     requirements = [line for line in f.readlines()]
+
 
 setup(
     name='mem_usage_ui',
-    version='0.5',
+    version=version,
     description='UI for memory usage of processes',
     long_description=README,
     author='Dmytro Smyk',
@@ -22,11 +35,14 @@ setup(
     },
     classifiers=[
         "Operating System :: OS Independent",
+        'Intended Audience :: Developers',
+        'Programming Language :: Python',
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
     install_requires=requirements,
+    python_requires='>=3.5.3',
     entry_points={
         'console_scripts': ['mem_usage_ui = mem_usage_ui.__main__:main']
     }

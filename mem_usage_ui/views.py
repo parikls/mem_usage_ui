@@ -8,7 +8,6 @@ import psutil
 from aiohttp.web_response import Response
 from aiohttp.web_ws import WebSocketResponse
 
-from mem_usage_ui.snapshot import SnapshotProcessor
 from mem_usage_ui.settings import TEMPLATES_DIR
 
 logger = logging.getLogger("mem_usage_ui")
@@ -16,8 +15,6 @@ logger = logging.getLogger("mem_usage_ui")
 
 ROOT = "root"
 PROCESS_ATTRS = ("pid", "name", "cmdline")
-
-snapshot_processor = SnapshotProcessor()
 
 
 async def index(request):
@@ -51,6 +48,7 @@ async def websocket_handler(request):
 
     logger.info("New websocket connection")
     request.app["websockets"].add(ws)
+    snapshot_processor = request.app["snapshot_processor"]
 
     async for msg in ws:
 
@@ -59,7 +57,6 @@ async def websocket_handler(request):
                 message = msg.json()
             except (TypeError, ValueError) as e:
                 await ws.send_json({"success": False, "message": "Can't load provided JSON"})
-                await ws.close()
             else:
                 await snapshot_processor.process_user_message(ws, message)
 
