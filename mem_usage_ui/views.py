@@ -1,7 +1,6 @@
 import getpass
 import json
 import logging
-import os
 
 import aiohttp
 import psutil
@@ -19,7 +18,7 @@ PROCESS_ATTRS = ("pid", "name", "cmdline")
 
 async def index(request):
     logger.info("rendering index.html")
-    with open(os.path.join(TEMPLATES_DIR, "index.html")) as f:
+    with (TEMPLATES_DIR / "index.html").open() as f:
         return Response(text=f.read(), content_type="text/html")
 
 
@@ -55,13 +54,13 @@ async def websocket_handler(request):
         if msg.type == aiohttp.WSMsgType.TEXT:
             try:
                 message = msg.json()
-            except (TypeError, ValueError) as e:
+            except (TypeError, ValueError):
                 await ws.send_json({"success": False, "message": "Can't load provided JSON"})
             else:
                 await snapshot_processor.process_user_message(ws, message)
 
         elif msg.type == aiohttp.WSMsgType.ERROR:
-            print('ws connection closed with exception %s' % ws.exception())
+            logger.info('ws connection closed with exception %s' % ws.exception())
 
     logger.info("Websocket disconnect. Cleaning")
     await snapshot_processor.unsubscribe(ws)

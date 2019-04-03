@@ -40,6 +40,7 @@ Frontend
 --------
 
 - Go to frontend directory: `cd frontend`
+- Install dependencies: `npm install`
 - Create (and watch) dev build - `npm run dev`
 - Before PR please create a production build `npm run prod`
 

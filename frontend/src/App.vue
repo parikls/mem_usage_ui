@@ -42,7 +42,7 @@
 
         <div v-bind:class="{'chart-full': fullScreenView, 'chart': !fullScreenView}">
             <p class="center-align red-text" v-if="errorMessage">{{ errorMessage }}</p>
-            <line-chart :chart-data="chartDataCollection"></line-chart>
+            <line-chart :chart-data="chartDataCollection" :points-visible="pointsVisible"></line-chart>
             <div class="filter">
                 <div class="row">
                     <div class="col s12 m12 l12">
@@ -88,7 +88,8 @@
                 snapshotInterval: 1,
                 snapshotEnabled: false,
                 errorMessage: null,
-                fullScreenView: false
+                fullScreenView: false,
+                pointsVisible: false
             }
         },
 
@@ -129,6 +130,7 @@
                 this.activeProcess = process;
                 this.snapshotEnabled = true;
                 this.errorMessage = null;
+                this.pointsVisible = false;
                 this.chartData = {
                     memory: [],
                     timestamps: []
@@ -157,6 +159,7 @@
                 }));
                 this.snapshotEnabled = false;
                 this.activeProcess = {};
+                this.pointsVisible = true;
             },
 
             /**

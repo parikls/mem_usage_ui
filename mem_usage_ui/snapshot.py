@@ -9,7 +9,12 @@ logger = logging.getLogger("mem_usage_ui")
 
 SUBSCRIBE = "subscribe"
 UNSUBSCRIBE = "unsubscribe"
+
 RSS_DIVIDER = 1024
+
+EXTENDED_PROCESS_ATTRS = (
+    "memory_info", "status", "cpu_percent", "memory_percent", "num_threads", "username"
+)
 
 
 class SnapshotProcessor:
@@ -53,9 +58,7 @@ class SnapshotProcessor:
 
         try:
             process = psutil.Process(pid)
-            process = process.as_dict(
-                attrs=("memory_info", "status", "cpu_percent", "memory_percent", "num_threads", "username")
-            )
+            process = process.as_dict(attrs=EXTENDED_PROCESS_ATTRS)
             process["rss"] = round(process.pop("memory_info").rss / RSS_DIVIDER / RSS_DIVIDER)
             process["success"] = True
 
