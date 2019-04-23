@@ -52,5 +52,5 @@ Frontend part
 Pull request
 ------------
 
-- Before pull request please create a production build `npm run prod`
+- Before pull request please create a production build `npm run build`
 
