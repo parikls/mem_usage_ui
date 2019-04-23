@@ -44,6 +44,7 @@ class RoutesTestCase(AioHTTPTestCase):
     @unittest_run_loop
     async def test_websocket_subscribe_invalid_process(self):
         expected_response = {
+            "type": "pid_update",
             "success": False,
             "message": "No such process or it was terminated."
         }

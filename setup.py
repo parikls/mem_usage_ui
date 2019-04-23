@@ -24,7 +24,7 @@ with requirements_path.open() as f:
 setup(
     name='mem_usage_ui',
     version=version,
-    description='UI for memory usage of processes',
+    description='Measuring and graphing memory usage of local processes',
     long_description=README,
     author='Dmytro Smyk',
     author_email='porovozls@gmail.com',

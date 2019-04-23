@@ -21,6 +21,11 @@ export default class WS {
         console.log("init websocket server");
         this.server = new WebSocket(this.url);
         this.server.onmessage = this.onmessage;
+        this.server.onopen = () => this.server.send(
+            JSON.stringify({
+                type: "init"
+            }));
+
         this.initReconnect()
     }
 

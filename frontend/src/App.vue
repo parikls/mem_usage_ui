@@ -14,11 +14,6 @@
                     <label for="snapshot-interval">Memory snapshot interval</label>
                 </div>
 
-
-                <p class="center-align">
-                    <a class="btn refresh-processes grey darken-2 white-text" @click="refreshProcesses">refresh
-                        processes</a>
-                </p>
             </div>
 
             <table class="highlight centered responsive-table white-text">
@@ -63,9 +58,11 @@
 </template>
 
 <script>
-    import axios from "axios";
     import LineChart from "./Chart"
     import WS from "./websocket"
+    
+    const PID_UPDATE = "pid_update";
+    const PROCESS_DIFF = "process_diff";
 
     export default {
         name: 'app',
@@ -76,7 +73,7 @@
             return {
                 ws: null,
                 processFilter: "",
-                processes: [],
+                processes: {},
                 activeProcess: {},
 
                 chartDataCollection: null,
@@ -94,19 +91,10 @@
         },
 
         mounted() {
-            this.refreshProcesses();
-            this.ws = new WS(`ws://${window.location.host}/ws`, this.handleRealtimeMessage);
+            this.ws = new WS(`ws://${window.location.host}/ws`, this.websocketHandler);
         },
 
         methods: {
-            /**
-             * Get list of all running processes
-             */
-            refreshProcesses() {
-                axios.get("/processes").then(response => {
-                    this.$set(this, "processes", response.data);
-                })
-            },
 
             /**
              * Perform subscribing to a particular process
@@ -163,19 +151,42 @@
             },
 
             /**
+             * Main entry point for any message which comes from websocket
+             */
+            websocketHandler(message){
+                let data;
+
+                try {
+                    data = JSON.parse(message.data);
+                } catch (e) {
+                    alert(`Cant represent '${data}' as JSON`);
+                    return;
+                }
+
+                if (data.type === PID_UPDATE){
+                    this.handlePidUpdate(data);
+                } else if (data.type === PROCESS_DIFF){
+                    this.handleProcessDiff(data);
+                } else {
+                    // unknown type
+                    alert(`Unknown message type ${data.type}`)
+                }
+            },
+
+            /**
              * Handle websocket messages and push mem snapshot values.
              * Chart is being updated reactive
-             * @param message: websocket event
+             * @param data: payload
              */
-            handleRealtimeMessage(message) {
-                let data = JSON.parse(message.data);
+            handlePidUpdate(data) {
                 if (data.success) {
-                    if (this.chartData.memory[this.chartData.memory.length - 1] === data.rss &&
-                        this.chartData.memory[this.chartData.memory.length - 2] === data.rss) {
-                        // memory consumption didn't changed. adjust timestamp
+                    if (this.chartData.memory[this.chartData.memory.length - 1] === data.process.rss &&
+                        this.chartData.memory[this.chartData.memory.length - 2] === data.process.rss) {
+                        // memory consumption didn't changed.
+                        // do not draw extra point - just adjust timestamp
                         this.chartData.timestamps[this.chartData.timestamps.length - 1] = (new Date).toLocaleTimeString();
                     } else {
-                        this.chartData.memory.push(data.rss);
+                        this.chartData.memory.push(data.process.rss);
                         this.chartData.timestamps.push((new Date).toLocaleTimeString());
                     }
 
@@ -189,18 +200,35 @@
                         }]
                     }
                 } else {
-                    // bad response
+                    // bad response - cleanup internal variables
                     this.activeProcess = {};
                     this.snapshotEnabled = false;
                     this.errorMessage = data.message;
+                    this.pointsVisible = true;
                 }
-            }
+            },
 
+            /**
+             * Handles processes diff payload.
+             * @param data: processes diff
+             */
+            handleProcessDiff(data){
+
+                let self = this;
+
+                for (let pid of data.payload.terminated){
+                    self.$delete(self.processes, pid);
+                }
+
+                for (let [pid, process] of Object.entries(data.payload.new)){
+                    self.$set(self.processes, pid, process);
+                }
+            },
         },
 
         computed: {
             filteredProcesses() {
-                return this.processes
+                return Object.values(this.processes)
                     .filter(
                         (process) =>
                             process.name.toLowerCase().indexOf(this.processFilter.toLowerCase()) !== -1 ||
@@ -259,10 +287,6 @@
 
     input[type=text]:not(.browser-default):focus:not([readonly]) + label {
         color: #ff3d00
-    }
-
-    .refresh-processes {
-        margin-top: 3vh;
     }
 
 </style>

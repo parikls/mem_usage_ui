@@ -12,7 +12,7 @@ from mem_usage_ui.snapshot import SnapshotProcessor
 async def init_app(loop):
     app = web.Application()
     app["websockets"] = set()
-    app["snapshot_processor"] = SnapshotProcessor(loop)
+    app["snapshot_processor"] = SnapshotProcessor(app, loop)
 
     app.on_cleanup.append(shutdown)
     setup_routes(app)
@@ -26,42 +26,17 @@ async def shutdown(app):
     app["websockets"].clear()
 
 
-def configure_logging(debug=False):
-    level = logging.DEBUG if debug else logging.INFO
+def open_browser(url, options):
+    if options.debug:
+        return
 
-    dictConfig({
-        'version': 1,
-        'disable_existing_loggers': False,
-        'formatters': {
-            'standard': {
-                'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-            },
-        },
-        'handlers': {
-            'default': {
-                'level': level,
-                'formatter': 'standard',
-                'class': 'logging.StreamHandler',
-            },
-        },
-        'loggers': {
-            'mem_usage_ui': {
-                'handlers': ['default'],
-                'level': level,
-                'propagate': True
-            },
-        }
-    })
-
-
-def open_browser(url):
     import webbrowser
     webbrowser.open(url)
 
 
 def parse_args():
     parser = ArgumentParser()
-    parser.add_argument("--debug", required=False, default=False)
+    parser.add_argument("--debug", required=False, default=False, type=bool)
     parser.add_argument("--host", required=False, default="localhost")
     parser.add_argument("--port", required=False, default=8080)
 
@@ -70,11 +45,15 @@ def parse_args():
 
 def main():
     options = parse_args()
-    configure_logging(options.debug)
     loop = asyncio.get_event_loop()
     loop.set_debug(options.debug)
     app = init_app(loop)
-    loop.call_later(1, open_browser, "http://{host}:{port}".format(host=options.host, port=options.port))
+    loop.call_later(
+        1,
+        open_browser,
+        "http://{host}:{port}".format(host=options.host, port=options.port),
+        options
+    )
     web.run_app(app, host=options.host, port=options.port)
 
 

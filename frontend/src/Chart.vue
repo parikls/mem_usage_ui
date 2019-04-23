@@ -56,6 +56,8 @@
 
                     // and finally re-render the chart with tooltips
                     this.renderChart(this.chartData, extendedOptions);
+                } else {
+                    this.renderChart(this.chartData, this.options);
                 }
             }
         }
