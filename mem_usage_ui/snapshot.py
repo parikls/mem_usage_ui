@@ -57,39 +57,6 @@ class SnapshotProcessor:
         # process diff task
         loop.create_task(self.process_diff())
 
-    async def process_user_message(self, ws: WebSocketResponse, message: dict):
-        """
-        Process user message. Creates or cancel
-        snapshotting tasks based on user input
-        """
-        logger.info("Processing user message")
-
-        # todo: handle unknown message type
-        if message["type"] == self.MESSAGE_INIT:
-
-            # on init - send only existing processes
-            await self.send_process_diff(
-                terminated_processes=None,
-                new_processes=self._processes
-            )
-
-        elif message["type"] == self.MESSAGE_SUBSCRIBE:
-            await self.subscribe(ws, message)
-
-        elif message["type"] == self.MESSAGE_UNSUBSCRIBE:
-            await self.unsubscribe(ws)
-
-    async def subscribe(self, ws: WebSocketResponse, message: dict):
-        logger.info("New subscribe message received for PID %s" % message["pid"])
-        self._pid_ws[message["pid"]] = ws
-        self._ws_pid[ws] = message["pid"]
-        self._loop.create_task(
-            self.snapshot(
-                message["pid"],
-                message.get("interval", self.MEMORY_SNAPSHOT_INTERVAL)
-            )
-        )
-
     async def process_diff(self):
         """
         Background task which take a process snapshot every `interval`,
@@ -118,16 +85,49 @@ class SnapshotProcessor:
         # re-schedule task
         self._loop.create_task(self.process_diff())
 
+    async def process_user_message(self, ws: WebSocketResponse, message: dict):
+        """
+        Process user message. Creates or cancel
+        snapshot tasks based on user input
+        """
+        logger.info("Processing user message")
+
+        # todo: handle unknown message type
+        if message["type"] == self.MESSAGE_INIT:
+
+            # on init - send only existing processes
+            await self.send_process_diff(
+                terminated_processes=None,
+                new_processes=self._processes
+            )
+
+        elif message["type"] == self.MESSAGE_SUBSCRIBE:
+            await self.subscribe(ws, message)
+
+        elif message["type"] == self.MESSAGE_UNSUBSCRIBE:
+            await self.unsubscribe(ws)
+
+    async def subscribe(self, ws: WebSocketResponse, message: dict):
+        logger.info("New subscribe message received for PID %s" % message["pid"])
+
+        # reference of PID to websocket and vice versa
+        self._pid_ws[message["pid"]] = ws
+        self._ws_pid[ws] = message["pid"]
+
+        self._loop.create_task(
+            self.snapshot(
+                message["pid"],
+                message.get("interval", self.MEMORY_SNAPSHOT_INTERVAL)
+            )
+        )
+
     async def send_process_diff(
             self,
             terminated_processes: Union[None, List] = None,
             new_processes: Union[None, Dict[int, Dict]] = None
     ):
-        if terminated_processes is None:
-            terminated_processes = []
-
-        if new_processes is None:
-            new_processes = []
+        terminated_processes = terminated_processes or []
+        new_processes = new_processes or []
 
         result = {
             "type": "process_diff",
@@ -151,7 +151,7 @@ class SnapshotProcessor:
     async def snapshot(self, pid: int, interval: float = 1):
         await asyncio.sleep(float(interval))
 
-        paylod = {"type": "pid_update"}
+        payload = {"type": "pid_update"}
 
         try:
             ws = self._pid_ws[pid]
@@ -166,18 +166,18 @@ class SnapshotProcessor:
                 process.pop("memory_info").rss / self.MEM_RSS_DIVIDER / self.MEM_RSS_DIVIDER
             )
 
-            paylod["success"] = True
-            paylod["process"] = process
+            payload["success"] = True
+            payload["process"] = process
 
         except (Error, ValueError):
             logger.warning("No such process. PID=%s" % pid)
-            paylod["success"] = False
-            paylod["message"] = "No such process or it was terminated."
-            await ws.send_json(paylod)
+            payload["success"] = False
+            payload["message"] = "No such process or it was terminated."
+            await ws.send_json(payload)
             await self.unsubscribe(ws)
             return
 
         if not ws.closed:
-            await ws.send_json(paylod)
+            await ws.send_json(payload)
             # still subscribed - re-schedule
             _ = self._loop.create_task(self.snapshot(pid, interval))
