@@ -43,9 +43,8 @@
                     <div class="col s12 m12 l12">
                         <p class="center-align">
                             <a class="btn grey darken-1 white-text" v-if="snapshotEnabled" @click="unsubscribe">Stop snapshotting</a>
-                        </p>
-                        <p class="center-align">
                             <a class="btn grey darken-1 white-text" @click="fullScreenView = !fullScreenView">{{ fullScreenText }}</a>
+                            <a class="btn grey darken-1 white-text" v-if="activeProcessUniqueId" @click="exportChartAsImage">Export chart as image</a>
                         </p>
                     </div>
                 </div>
@@ -60,6 +59,7 @@
 <script>
     import LineChart from "./Chart"
     import WS from "./websocket"
+    import eventBus from "./bus";
     
     const PID_UPDATE = "pid_update";
     const PROCESS_DIFF = "process_diff";
@@ -86,7 +86,8 @@
                 snapshotEnabled: false,
                 errorMessage: null,
                 fullScreenView: false,
-                pointsVisible: false
+                pointsVisible: false,
+                activeProcessUniqueId: null
             }
         },
 
@@ -123,6 +124,8 @@
                     memory: [],
                     timestamps: []
                 };
+
+                this.activeProcessUniqueId = `${this.activeProcess.name}_${this.activeProcess.pid}`;
 
                 // send `subscribe` event
                 this.ws.server.send(JSON.stringify({
@@ -224,6 +227,10 @@
                     self.$set(self.processes, pid, process);
                 }
             },
+
+            exportChartAsImage(){
+                eventBus.$emit("chart.export", this.activeProcessUniqueId)
+            }
         },
 
         computed: {

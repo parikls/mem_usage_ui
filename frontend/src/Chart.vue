@@ -1,5 +1,6 @@
 <script>
     import {Line, mixins} from 'vue-chartjs'
+    import eventBus from "./bus";
 
     const {reactiveProp} = mixins;
 
@@ -32,7 +33,26 @@
             }
         },
         mounted() {
-            this.renderChart(this.chartData, this.options)
+            this.renderChart(this.chartData, this.options);
+
+            // export chart as image
+            let self = this;
+            eventBus.$on("chart.export", function(chartName){
+
+                // create temp download url
+                let linkSource = self.$refs.canvas.toDataURL('image/png');
+                let fileName = `${chartName}.png`;
+
+                let downloadLink = document.createElement("a");
+                downloadLink.href = linkSource;
+                downloadLink.download = fileName;
+
+                // click to start the download
+                downloadLink.click();
+
+                // cleanup element
+                downloadLink.remove();
+            })
         },
 
         watch: {

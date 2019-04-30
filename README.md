@@ -2,7 +2,6 @@ Disclaimer
 ==========
 
 - This project was born after this question: https://stackoverflow.com/questions/7998302/graphing-a-processs-memory-usage/54072026#54072026
-- I'm tired of console measuring of memory usage so decided to create a web interface for this. 
 - Built on top of `psutil`
 
 Description
