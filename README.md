@@ -1,8 +1,8 @@
 mem-usage-ui
 ============
 
-[![Build Status](https://travis-ci.org/parikls/mem_usage_ui.svg?branch=master)](https://travis-ci.org/parikls/mem_usage_ui)
-[![PyPI version](https://badge.fury.io/py/mem-usage-ui.svg)](https://badge.fury.io/py/mem-usage-ui)
+- [![Build Status](https://travis-ci.org/parikls/mem_usage_ui.svg?branch=master)](https://travis-ci.org/parikls/mem_usage_ui) [![PyPI version](https://badge.fury.io/py/mem-usage-ui.svg)](https://badge.fury.io/py/mem-usage-ui) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mem_usage_ui.svg)
+- ![GitHub stars](https://img.shields.io/github/stars/parikls/mem_usage_ui.svg) ![PyPI - Downloads](https://img.shields.io/pypi/dm/mem_usage_ui.svg) ![GitHub issues](https://img.shields.io/github/issues/parikls/mem_usage_ui.svg)
 
 Disclaimer
 ==========
