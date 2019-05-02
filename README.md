@@ -1,3 +1,9 @@
+mem-usage-ui
+============
+
+[![Build Status](https://travis-ci.org/parikls/mem_usage_ui.svg?branch=master)](https://travis-ci.org/parikls/mem_usage_ui)
+[![PyPI version](https://badge.fury.io/py/mem-usage-ui.svg)](https://badge.fury.io/py/mem-usage-ui)
+
 Disclaimer
 ==========
 

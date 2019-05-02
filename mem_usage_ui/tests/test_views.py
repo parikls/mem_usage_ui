@@ -3,7 +3,7 @@ import json
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
 
 from mem_usage_ui.__main__ import init_app
-from mem_usage_ui.snapshot import SUBSCRIBE
+from mem_usage_ui.snapshot import SnapshotProcessor
 
 
 class RoutesTestCase(AioHTTPTestCase):
@@ -50,7 +50,7 @@ class RoutesTestCase(AioHTTPTestCase):
         }
 
         async with self.client.ws_connect('/ws') as ws:
-            await ws.send_json({"type": SUBSCRIBE, "pid": -1})
+            await ws.send_json({"type": SnapshotProcessor.MESSAGE_SUBSCRIBE, "pid": -1})
             async for msg in ws:
                 response = json.loads(msg.data)
                 self.assertDictEqual(expected_response, response)
