@@ -31,7 +31,7 @@ setup(
     url='https://github.com/parikls/mem_usage_ui',
     packages=["mem_usage_ui"],
     package_data={
-        'mem_usage_ui': ['templates/index.html', 'static/js/build.js']
+        'mem_usage_ui': ['templates/index.html', 'static/js/build.js', 'static/img/*']
     },
     classifiers=[
         "Operating System :: OS Independent",
