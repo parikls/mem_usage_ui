@@ -52,6 +52,7 @@
 
         </div>
 
+        <contacts></contacts>
 
     </div>
 </template>
@@ -60,14 +61,15 @@
     import LineChart from "./Chart"
     import WS from "./websocket"
     import eventBus from "./bus";
-    
+    import Contacts from "./components/Contacts";
+
     const PID_UPDATE = "pid_update";
     const PROCESS_DIFF = "process_diff";
 
     export default {
         name: 'app',
         components: {
-            LineChart
+            LineChart, Contacts
         },
         data() {
             return {
