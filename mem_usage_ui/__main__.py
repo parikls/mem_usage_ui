@@ -1,7 +1,5 @@
 import asyncio
-import logging
 from argparse import ArgumentParser
-from logging.config import dictConfig
 
 from aiohttp import web
 

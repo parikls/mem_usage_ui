@@ -19,7 +19,7 @@ async def websocket_handler(request):
     """
     Handle websocket connections
     """
-    ws = WebSocketResponse()
+    ws = WebSocketResponse(autoping=True, heartbeat=30)
     await ws.prepare(request)
 
     logger.info("New websocket connection")
