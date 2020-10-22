@@ -29,8 +29,8 @@ class SnapshotProcessor:
     EXTENDED_PROCESS_ATTRS = (
         "memory_info", "status", "cpu_percent", "memory_percent", "num_threads", "username"
     )
-    PROCESS_DIFF_SNAPSHOT_INTERVAL = 1.0
-    MEMORY_SNAPSHOT_INTERVAL = 1.0
+    PROCESS_DIFF_SNAPSHOT_INTERVAL = 1
+    MEMORY_SNAPSHOT_INTERVAL = 1
 
     @staticmethod
     def get_processes_as_dict() -> Dict:
@@ -57,13 +57,13 @@ class SnapshotProcessor:
         # process diff task
         loop.create_task(self.process_diff())
 
-    async def process_diff(self, interval: float = PROCESS_DIFF_SNAPSHOT_INTERVAL):
+    async def process_diff(self):
         """
         Background task which take a process snapshot every `interval`,
         and sends a diff to all connected websockets
         """
 
-        await asyncio.sleep(interval)
+        await asyncio.sleep(self.PROCESS_DIFF_SNAPSHOT_INTERVAL)
 
         if self._websockets:
             # proceed only if there are connected clients
@@ -136,9 +136,13 @@ class SnapshotProcessor:
             }
         }
 
-        for ws in self._websockets:
+        # iterate over a copy to avoid potential error with mutability
+        for ws in list(self._websockets):
             try:
                 await ws.send_json(result)
+            except RuntimeError:
+                # TCP closed ?
+                pass
             except Exception as e:
                 logger.exception(e)
 
@@ -147,7 +151,7 @@ class SnapshotProcessor:
         pid = self._ws_pid.pop(ws, None)
         self._pid_ws.pop(pid, None)
 
-    async def snapshot(self, pid: int, interval: float = MEMORY_SNAPSHOT_INTERVAL):
+    async def snapshot(self, pid: int, interval: float = 1):
         await asyncio.sleep(float(interval))
 
         try:

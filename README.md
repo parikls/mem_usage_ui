@@ -34,5 +34,5 @@ Usage
 Possible Command Line Arguments
 ===============================
 
-- `host` - defaults to `localhost`
-- `port` - defaults to `8080`
+- `--host` - defaults to `localhost`
+- `--port` - defaults to `8080`
