@@ -7,7 +7,7 @@ import uvloop
 uvloop.install()
 
 _py_version = (sys.version_info.major, sys.version_info.minor)
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 if _py_version < (3, 5):
     raise RuntimeError("Python versions prior to 3.5 are not supported")

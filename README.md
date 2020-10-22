@@ -14,7 +14,7 @@ Description
 ===========
 
 - Measuring and graphing memory usage of local processes
-- Supported python versions are `3.5+` (`3.7` is a preferable interpreter)
+- Supported python versions are `3.5+`
 
 ![alt text](https://raw.githubusercontent.com/parikls/mem_usage_ui/master/mem_usage_ui.png)
 
@@ -22,7 +22,7 @@ Description
 Installation
 ============
 
-- run `pip3 install mem_usage_ui` or `pip install mem_usage_ui`
+- `pip install mem_usage_ui`
 
 Usage
 =====
@@ -30,3 +30,9 @@ Usage
 - Run in shell: `mem_usage_ui`
 - Default browser will be opened automatically
 - Running on `http://localhost:8080`
+
+Possible Command Line Arguments
+===============================
+
+- `host` - defaults to `localhost`
+- `port` - defaults to `8080`

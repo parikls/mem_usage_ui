@@ -29,11 +29,11 @@ class SnapshotProcessor:
     EXTENDED_PROCESS_ATTRS = (
         "memory_info", "status", "cpu_percent", "memory_percent", "num_threads", "username"
     )
-    PROCESS_DIFF_SNAPSHOT_INTERVAL = 1
-    MEMORY_SNAPSHOT_INTERVAL = 1
+    PROCESS_DIFF_SNAPSHOT_INTERVAL = 1.0
+    MEMORY_SNAPSHOT_INTERVAL = 1.0
 
     @staticmethod
-    def get_processes_as_dict() -> dict:
+    def get_processes_as_dict() -> Dict:
         """
         Return processes in a dict format where key is a PID
         """
@@ -57,13 +57,13 @@ class SnapshotProcessor:
         # process diff task
         loop.create_task(self.process_diff())
 
-    async def process_diff(self):
+    async def process_diff(self, interval: float = PROCESS_DIFF_SNAPSHOT_INTERVAL):
         """
         Background task which take a process snapshot every `interval`,
         and sends a diff to all connected websockets
         """
 
-        await asyncio.sleep(self.PROCESS_DIFF_SNAPSHOT_INTERVAL)
+        await asyncio.sleep(interval)
 
         if self._websockets:
             # proceed only if there are connected clients
@@ -121,11 +121,10 @@ class SnapshotProcessor:
             )
         )
 
-    async def send_process_diff(
-            self,
-            terminated_processes: Union[None, List] = None,
-            new_processes: Union[None, Dict[int, Dict]] = None
-    ):
+    async def send_process_diff(self,
+                                terminated_processes: Union[None, List] = None,
+                                new_processes: Union[None, Dict[int, Dict]] = None):
+
         terminated_processes = terminated_processes or []
         new_processes = new_processes or []
 
@@ -148,16 +147,16 @@ class SnapshotProcessor:
         pid = self._ws_pid.pop(ws, None)
         self._pid_ws.pop(pid, None)
 
-    async def snapshot(self, pid: int, interval: float = 1):
+    async def snapshot(self, pid: int, interval: float = MEMORY_SNAPSHOT_INTERVAL):
         await asyncio.sleep(float(interval))
-
-        payload = {"type": "pid_update"}
 
         try:
             ws = self._pid_ws[pid]
         except KeyError:
             # user unsubscribed
             return
+
+        payload = {"type": "pid_update"}
 
         try:
             process = psutil.Process(pid)
