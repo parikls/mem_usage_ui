@@ -28,16 +28,19 @@
                                 labelString: 'Time'
                             }
                         }]
+                    },
+                    tooltips: {
+                        intersect: false
                     }
                 }
-            }
+            };
         },
         mounted() {
             this.renderChart(this.chartData, this.options);
 
             // export chart as image
             let self = this;
-            eventBus.$on("chart.export", function(chartName){
+            eventBus.$on("chart.export", function (chartName) {
 
                 // create temp download url
                 let linkSource = self.$refs.canvas.toDataURL('image/png');
@@ -56,19 +59,17 @@
         },
 
         watch: {
-            pointsVisible: function(value){
+            pointsVisible: function (value) {
 
-                if (value === true){
+                if (value === true) {
 
                     // let's do a deep-copy of existing options
                     let extendedOptions = JSON.parse(JSON.stringify(this.options));
 
                     // and extend them with tooltips and events
-                    extendedOptions.tooltips = {
-                        callbacks: {
-                            label: function (tooltipItem, data) {
-                                return `${tooltipItem.yLabel} MB`;
-                            }
+                    extendedOptions.tooltips.callbacks = {
+                        label: function (tooltipItem, data) {
+                            return `${tooltipItem.yLabel} MB`;
                         }
                     };
 

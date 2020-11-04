@@ -7,9 +7,8 @@
 
         <div ref="taptarget" class="tap-target deep-orange accent-3 white-text" data-target="menu">
             <div class="tap-target-content">
-                <h5>Thank You!</h5>
-                <p>Questions? - feel free to contact me - <a class="link" href="mailto:porovozls@gmail.com">porovozls@gmail.com</a></p>
-                <p>Or via github - <a class="link" href="https://github.com/parikls">https://github.com/parikls</a> </p>
+                <h5>Thanks for downloading</h5>
+                <p>Questions? - feel free to contact me via github - <a class="link" href="https://github.com/parikls">https://github.com/parikls</a></p>
                 <p>Really appreciate for a star!)
 
                     <iframe

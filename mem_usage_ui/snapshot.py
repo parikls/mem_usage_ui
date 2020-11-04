@@ -108,6 +108,10 @@ class SnapshotProcessor:
             await self.unsubscribe(ws)
 
     async def subscribe(self, ws: WebSocketResponse, message: dict):
+        """
+        Entry point for process subscription. Put user into an internal structures
+        and schedules a snapshot task for this user
+        """
         logger.info("New subscribe message received for PID %s" % message["pid"])
 
         # reference of PID to websocket and vice versa
@@ -121,10 +125,18 @@ class SnapshotProcessor:
             )
         )
 
+    async def unsubscribe(self, ws: WebSocketResponse):
+        """ Unsubscribe from a process snapshotting. Cleanup internal structures """
+        logger.info("Unsubscribe message received")
+        pid = self._ws_pid.pop(ws, None)
+        self._pid_ws.pop(pid, None)
+
     async def send_process_diff(self,
                                 terminated_processes: Union[None, List] = None,
                                 new_processes: Union[None, Dict[int, Dict]] = None):
-
+        """
+        Send process diff to all connected user
+        """
         terminated_processes = terminated_processes or []
         new_processes = new_processes or []
 
@@ -140,37 +152,38 @@ class SnapshotProcessor:
         for ws in list(self._websockets):
             try:
                 await ws.send_json(result)
-            except RuntimeError:
-                # TCP closed ?
+            except Exception:
+                # seems like TCP connection was closed
                 pass
-            except Exception as e:
-                logger.exception(e)
-
-    async def unsubscribe(self, ws: WebSocketResponse):
-        logger.info("Unsubscribe message received")
-        pid = self._ws_pid.pop(ws, None)
-        self._pid_ws.pop(pid, None)
 
     async def snapshot(self, pid: int, interval: float = 1):
+        """
+        Main task which get a process data and send it to a user.
+        In the end - re-schedules self if user is still subscribed
+        """
         await asyncio.sleep(float(interval))
 
         try:
             ws = self._pid_ws[pid]
         except KeyError:
-            # user unsubscribed
+            # user unsubscribed - terminate task
             return
 
         payload = {"type": "pid_update"}
 
         try:
             process = psutil.Process(pid)
-            process = process.as_dict(attrs=self.EXTENDED_PROCESS_ATTRS)
-            process["rss"] = round(
-                process.pop("memory_info").rss / self.MEM_RSS_DIVIDER / self.MEM_RSS_DIVIDER
-            )
+            process_dict = process.as_dict(attrs=self.EXTENDED_PROCESS_ATTRS)
+            memory_info = process_dict.pop("memory_info", None)
+            if not memory_info:
+                raise ValueError("missing memory info")
 
+            process_dict['cpu_percent'] = process.cpu_percent(interval=None)
+            process_dict["rss"] = round(
+                memory_info.rss / self.MEM_RSS_DIVIDER / self.MEM_RSS_DIVIDER
+            )
             payload["success"] = True
-            payload["process"] = process
+            payload["process"] = process_dict
 
         except (Error, ValueError):
             logger.warning("No such process. PID=%s" % pid)

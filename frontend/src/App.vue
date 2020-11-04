@@ -42,9 +42,9 @@
                 <div class="row">
                     <div class="col s12 m12 l12">
                         <p class="center-align">
-                            <a class="btn grey darken-1 white-text" v-if="snapshotEnabled" @click="unsubscribe">Stop snapshotting</a>
+                            <a class="btn grey darken-1 white-text" v-if="snapshotEnabled" @click="unsubscribe">Stop</a>
                             <a class="btn grey darken-1 white-text" @click="fullScreenView = !fullScreenView">{{ fullScreenText }}</a>
-                            <a class="btn grey darken-1 white-text" v-if="activeProcessUniqueId" @click="exportChartAsImage">Export chart as image</a>
+                            <a class="btn grey darken-1 white-text" v-if="activeProcessUniqueId" @click="exportChartAsImage">Export as PNG</a>
                         </p>
                     </div>
                 </div>
@@ -246,13 +246,23 @@
             },
 
             fullScreenText(){
-                return this.fullScreenView ? "Turn OFF full-screen view" : "Turn ON full-screen view"
+                return this.fullScreenView ? "Side-by-side view" : "Full-screen view"
             }
         }
     }
 </script>
 
 <style>
+
+    .processes {
+        position: absolute;
+        overflow: scroll;
+        height: 100vh;
+        max-height: 100vh;
+        width: 50vw;
+        max-width: 50vw;
+    }
+
     .chart {
         position: absolute;
         left: 50vw;
@@ -274,15 +284,6 @@
         max-height: 100vh;
     }
 
-    .processes {
-        position: absolute;
-        overflow: scroll;
-        height: 100vh;
-        max-height: 100vh;
-        width: 50vw;
-        max-width: 50vw;
-    }
-
     td {
         cursor: pointer;
         max-width: 15vw;
@@ -296,6 +297,15 @@
 
     input[type=text]:not(.browser-default):focus:not([readonly]) + label {
         color: #ff3d00
+    }
+
+    [type="checkbox"].filled-in:checked+span:not(.lever):after {
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ff3d00;
+        background-color: #ff3d00;
+        z-index: 0;
     }
 
 </style>
