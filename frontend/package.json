@@ -10,7 +10,7 @@
     "build": "cross-env NODE_ENV=production webpack --progress"
   },
   "dependencies": {
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "chart.js": "^2.9.3",
     "vue": "^2.6.12",
     "vue-chartjs": "^3.5.1"
