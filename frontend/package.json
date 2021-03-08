@@ -28,7 +28,7 @@
     "babel-preset-stage-3": "^6.24.1",
     "cross-env": "^5.2.1",
     "css-loader": "^0.28.11",
-    "elliptic": ">=6.5.3",
+    "elliptic": ">=6.5.4",
     "file-loader": "^1.1.4",
     "lodash": ">=4.17.19",
     "mem": ">=4.0.0",
