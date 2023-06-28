@@ -1,0 +1,51 @@
+name: PyPi Deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+
+  deploy:
+
+    name: PyPi Deploy
+    runs-on: ubuntu-latest
+    env:
+      PYPI_USER: ${{ secrets.PYPI_USER }}
+      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install poetry
+        run: pip install "poetry<=1.6"
+
+      - name: Skip virtualenv creation
+        run: poetry config virtualenvs.create false
+
+      - name: Configure PyPi credentials
+        run: poetry config http-basic.pypi ${{ env.PYPI_USER }} ${{ env.PYPI_PASSWORD }}
+
+      - name: Bump Version
+        run: poetry version patch
+
+      - name: Git set email
+        run: git config --global user.email "github.bot@pypi.org"
+
+      - name: Git set name
+        run: git config --global user.name "GitHub Bot"
+
+      - name: Commit
+        run: git commit -m "[skip ci] auto-bump-version" -a
+
+      - name: Push
+        run: git push
+
+      - name: Deploy to PyPi
+        run: poetry --build publish

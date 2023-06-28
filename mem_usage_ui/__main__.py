@@ -1,5 +1,5 @@
-import asyncio
 from argparse import ArgumentParser
+from typing import Optional, Any
 
 from aiohttp import web
 
@@ -7,11 +7,11 @@ from mem_usage_ui.routes import setup_routes
 from mem_usage_ui.snapshot import SnapshotProcessor
 
 
-async def init_app(loop):
+def init_app(options: Optional[Any] = None):
     app = web.Application()
     app["websockets"] = set()
-    app["snapshot_processor"] = SnapshotProcessor(app, loop)
-
+    app["options"] = options
+    app.on_startup.extend([open_browser, SnapshotProcessor.create])
     app.on_cleanup.append(shutdown)
     setup_routes(app)
     return app
@@ -24,11 +24,15 @@ async def shutdown(app):
     app["websockets"].clear()
 
 
-def open_browser(url, options):
+async def open_browser(app):
+    options = app["options"]
+    if not options:
+        return
     if options.debug:
         return
 
     import webbrowser
+    url = "http://{host}:{port}".format(host=options.host, port=options.port)
     webbrowser.open(url)
 
 
@@ -37,21 +41,12 @@ def parse_args():
     parser.add_argument("--debug", required=False, default=False, type=bool)
     parser.add_argument("--host", required=False, default="localhost")
     parser.add_argument("--port", required=False, default=8080)
-
     return parser.parse_args()
 
 
 def main():
     options = parse_args()
-    loop = asyncio.get_event_loop()
-    loop.set_debug(options.debug)
-    app = init_app(loop)
-    loop.call_later(
-        1,
-        open_browser,
-        "http://{host}:{port}".format(host=options.host, port=options.port),
-        options
-    )
+    app = init_app(options)
     web.run_app(app, host=options.host, port=options.port)
 
 

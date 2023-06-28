@@ -2,9 +2,6 @@ import asyncio
 import sys
 from logging.config import dictConfig
 
-import uvloop
-
-uvloop.install()
 
 _py_version = (sys.version_info.major, sys.version_info.minor)
 __version__ = '1.0.6'

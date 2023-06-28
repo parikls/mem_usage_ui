@@ -9,8 +9,7 @@ from mem_usage_ui.snapshot import SnapshotProcessor
 class RoutesTestCase(AioHTTPTestCase):
 
     async def get_application(self):
-        app = await init_app(self.loop)
-        return app
+        return init_app()
 
     @unittest_run_loop
     async def test_index(self):

@@ -1,7 +1,7 @@
 Backend part
 ------------
 
-- Install requirements: `pip install -r requirements.txt`
+- Install requirements: `poetry install`
 - Run tests: `pytetst`
 - Run app: `python -m mem_usage_ui --debug=True`
 

@@ -32,6 +32,13 @@ class SnapshotProcessor:
     PROCESS_DIFF_SNAPSHOT_INTERVAL = 1
     MEMORY_SNAPSHOT_INTERVAL = 1
 
+    @classmethod
+    async def create(cls, app):
+        instance = cls(app)
+        app["snapshot_processor"] = instance
+        asyncio.create_task(instance.process_diff())
+        return instance
+
     @staticmethod
     def get_processes_as_dict() -> Dict:
         """
@@ -41,21 +48,20 @@ class SnapshotProcessor:
         processes = {}
         for process in psutil.process_iter():
             if current_user == SnapshotProcessor.USER_ROOT or process.username() == current_user:
-                process_dict = process.as_dict(attrs=SnapshotProcessor.DEFAULT_PROCESS_ATTRS)
+                try:
+                    process_dict = process.as_dict(attrs=SnapshotProcessor.DEFAULT_PROCESS_ATTRS)
+                except Error:
+                    continue
                 process_dict["cmdline"] = " ".join(process_dict["cmdline"] or [])
                 processes[process_dict["pid"]] = process_dict
 
         return processes
 
-    def __init__(self, app: Application, loop=None):
+    def __init__(self, app: Application):
         self._websockets = app["websockets"]
         self._pid_ws = {}
         self._ws_pid = {}
-        self._loop = loop or asyncio.get_event_loop()
         self._processes = self.get_processes_as_dict()
-
-        # process diff task
-        loop.create_task(self.process_diff())
 
     async def process_diff(self):
         """
@@ -83,7 +89,7 @@ class SnapshotProcessor:
                 self._processes = current_processes
 
         # re-schedule task
-        self._loop.create_task(self.process_diff())
+        _ = asyncio.create_task(self.process_diff())
 
     async def process_user_message(self, ws: WebSocketResponse, message: dict):
         """
@@ -110,7 +116,7 @@ class SnapshotProcessor:
     async def subscribe(self, ws: WebSocketResponse, message: dict):
         """
         Entry point for process subscription. Put user into an internal structures
-        and schedules a snapshot task for this user
+        and schedule a snapshot task for this user
         """
         logger.info("New subscribe message received for PID %s" % message["pid"])
 
@@ -118,7 +124,7 @@ class SnapshotProcessor:
         self._pid_ws[message["pid"]] = ws
         self._ws_pid[ws] = message["pid"]
 
-        self._loop.create_task(
+        _ = asyncio.create_task(
             self.snapshot(
                 message["pid"],
                 message.get("interval", self.MEMORY_SNAPSHOT_INTERVAL)
@@ -135,7 +141,7 @@ class SnapshotProcessor:
                                 terminated_processes: Union[None, List] = None,
                                 new_processes: Union[None, Dict[int, Dict]] = None):
         """
-        Send process diff to all connected user
+        Send process diff to all connected users
         """
         terminated_processes = terminated_processes or []
         new_processes = new_processes or []
@@ -152,13 +158,13 @@ class SnapshotProcessor:
         for ws in list(self._websockets):
             try:
                 await ws.send_json(result)
-            except Exception:
-                # seems like TCP connection was closed
+            except Exception:  # noqa
+                # it seems like TCP connection was closed
                 pass
 
     async def snapshot(self, pid: int, interval: float = 1):
         """
-        Main task which get a process data and send it to a user.
+        Main task, which get a process data and send it to a user.
         In the end - re-schedules self if user is still subscribed
         """
         await asyncio.sleep(float(interval))
@@ -196,4 +202,4 @@ class SnapshotProcessor:
         if not ws.closed:
             await ws.send_json(payload)
             # still subscribed - re-schedule
-            _ = self._loop.create_task(self.snapshot(pid, interval))
+            _ = asyncio.create_task(self.snapshot(pid, interval))

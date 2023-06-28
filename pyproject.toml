@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "mem-usage-ui"
+version = "1.0.8"
+description = "Measuring and graphing memory usage of local processes"
+authors = ["Dmytro Smyk <porovozls@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "mem_usage_ui"}]
+include = ['templates/index.html', 'static/js/build.js', 'static/img/*']
+
+[tool.poetry.scripts]
+mem_usage_ui = 'mem_usage_ui.__main__:main'
+
+[tool.poetry.dependencies]
+python = ">=3.7,<4"
+psutil = "<6"
+aiohttp = ">=3,<5"
+
+[tool.poetry.group.tests]
+optional = true
+
+[tool.poetry.group.tests.dependencies]
+pytest = ">=5,<7"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
