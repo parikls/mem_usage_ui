@@ -22,6 +22,9 @@ optional = true
 [tool.poetry.group.tests.dependencies]
 pytest = ">=5,<7"
 
+[[tool.poetry.source]]
+name = "PyPi"
+priority = "default"
 
 [build-system]
 requires = ["poetry-core"]
