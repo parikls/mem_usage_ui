@@ -11,6 +11,10 @@ jobs:
 
     name: PyPi Deploy
     runs-on: ubuntu-latest
+    environment: master
+    env:
+      PYPI_USER: ${{ secrets.PYPI_USER }}
+      PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v3
@@ -27,7 +31,7 @@ jobs:
         run: poetry config virtualenvs.create false
 
       - name: Configure PyPi credentials
-        run: poetry config http-basic.pypi ${{ secrets.PYPI_USER }} ${{ secrets.PYPI_PASSWORD }}
+        run: poetry config http-basic.pypi ${{ env.PYPI_USER }} ${{ env.PYPI_PASSWORD }}
 
       - name: Bump Version
         run: poetry version patch
