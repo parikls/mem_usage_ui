@@ -40,7 +40,7 @@ def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--debug", required=False, default=False, type=bool)
     parser.add_argument("--host", required=False, default="localhost")
-    parser.add_argument("--port", required=False, default=8080)
+    parser.add_argument("--port", required=False, default=8080, type=int)
     return parser.parse_args()
 
 
