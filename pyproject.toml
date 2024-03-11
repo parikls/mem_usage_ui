@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mem-usage-ui"
-version = "1.0.9"
+version = "1.0.10"
 description = "Measuring and graphing memory usage of local processes"
 authors = ["Dmytro Smyk <porovozls@gmail.com>"]
 license = "MIT"
